@@ -4,36 +4,8 @@ var game = new Phaser.Game(256, 455, Phaser.AUTO, 'gameContainer',
 function preload () {
   game.load.spritesheet('blocks', 'assets/images/blocks.png', 16, 16)
 
-  game.load.image('spaceBG', 'assets/images/starfield.png')
-  game.load.image('spaceFG', 'assets/images/dustfield.png')
-  game.load.image('shout', 'assets/images/shout.png')
-  game.load.image('pressshout', 'assets/images/pressShout.png')
-
-  game.load.spritesheet('empty', 'assets/images/empty_sheet.png', 180, 180)
-  game.load.spritesheet('cactus1', 'assets/images/cactus1_sheet.png', 180, 180)
-
-  game.load.spritesheet('beehives', 'assets/images/beehives.png', 96, 96)
-  game.load.spritesheet('playerbee', 'assets/images/bigbee.png', 64, 64)
+  //game.load.image('spaceBG', 'assets/images/starfield.png')
 }
-
-var socket // Socket connection
-
-var spaceBG
-var spaceFG
-
-var player
-// The base of our player
-var startX = 0
-var startY = 0
-
-var glob = {
-  currentServerTick: 0,
-  intermittents: [],
-  otherPlayers: [],
-  planets: [],
-  shouts: []
-}
-window.glob = glob
 
 var selectedItemIndex = 0
 var itemCostStr = '...'
@@ -44,29 +16,24 @@ var UI_ICON_POS = {x: (-448 + 15), y: (-252 + 36)}
 var UI_TEXT_POS = {x: (-448 + 60), y: (-252 + 30)}
 var clickUsedByUI = false
 
-var planetGroup
-var playerGroup
-var uiGroup
-
 function create () {
   game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
-  // TODO remove for release????
-  game.stage.disableVisibilityChange = true;
-  socket = io.connect()
   Kii.initializeWithSite("u3hcavh35j65", "2d2df3c7956c4a22911e586523c9e469", KiiSite.US)
   // Start listening for events
   setEventHandlers()
 
   game.physics.startSystem(Phaser.Physics.ARCADE)
-  game.world.setBounds(-2000, -2000, 4000, 4000)
+  game.world.setBounds(0, 0, 256, 455)
 
   // Our tiled scrolling background
+  /*
   spaceBG = game.add.tileSprite(0, 0, 513, 912, 'spaceBG')
   spaceBG.fixedToCamera = true
   spaceFG = game.add.tileSprite(0, 0, 513, 912, 'spaceFG')
   spaceFG.fixedToCamera = true
+  */
 
-  tileGroup = game.add.group();
+  window.blocks = game.add.group();
   itemGroup = game.add.group();
 
   planetGroup = game.add.group();
@@ -329,7 +296,7 @@ var MAXCOUNT = 20
 var countdown = MAXCOUNT
 var MAXKEYCOUNT = 8
 var keyCountdown = MAXKEYCOUNT
-var ZERO_POINT = new Phaser.Point(0, 0)
+var ZERO_POINT = new Phaser.Geom.Point(0, 0)
 function update () {
   if (null != player) {
     player.update()
