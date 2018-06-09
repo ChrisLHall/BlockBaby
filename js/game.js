@@ -56,6 +56,19 @@ function create () {
   //uiText.anchor.setTo(0.5, 0.5)
   //uiText.inputEnabled = true;
   //uiText.events.onInputDown.add(clickShout, uiText);
+
+  this.input.on('dragstart', function (pointer, gameObj) {
+    if (gameObj.obj && gameObj.obj.dragStart) {
+      gameObj.obj.dragStart()
+    }
+  }, this);
+
+  this.input.on('drag', function (pointer, gameObj, dragX, dragY) {
+    if (gameObj.obj && gameObj.obj.drag) {
+      gameObj.obj.drag(dragX, dragY)
+    }
+  });
+
   window.clickUsedByUI = false
 }
 

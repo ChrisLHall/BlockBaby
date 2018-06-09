@@ -3,9 +3,14 @@ var Block = function (group, xIndex, yIndex, type) {
   this.x = xIndex
   this.y = yIndex
   this.group = group
-  this.gameObj = this.group.create(xIndex * 32 + Block.OFFSET.x, yIndex * 32 + Block.OFFSET.y, 'block').setOrigin(0).setScale(2)
+  this.gameObj = this.group.create(xIndex * 32 + Block.OFFSET.x, yIndex * 32 + Block.OFFSET.y, 'block')
+  this.gameObj.setOrigin(0).setScale(2).setInteractive()
   this.gameObj.obj = this
   this.gameObj.anims.load('all', Math.floor(Math.random() * 5))
+
+  this.group.scene.input.setDraggable(this.gameObj);
+
+
   this.group.scene.events.on('update', Block.prototype.update, this)
   /*
   this.input.on('dragstart', function (pointer, gameObject) {
@@ -23,11 +28,20 @@ var Block = function (group, xIndex, yIndex, type) {
   */
 }
 
-Block.NUM_BLOCKS = {x: 7, y: 6}
-Block.OFFSET = {x: 16, y: 200}
+Block.NUM_BLOCKS = {x: 7, y: 7}
+Block.OFFSET = {x: 16, y: 180}
 
 Block.prototype.update = function () {
 
+}
+
+Block.prototype.dragStart = function () {
+
+}
+
+Block.prototype.drag = function (dragX, dragY) {
+  this.gameObj.x = dragX
+  this.gameObj.y = dragY
 }
 
 Block.prototype.destroy = function () {
