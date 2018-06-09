@@ -1,49 +1,62 @@
-var game = new Phaser.Game(256, 455, Phaser.AUTO, 'gameContainer',
-    { preload: preload, create: create, update: update, render: render })
+
+var config = {
+  type: Phaser.AUTO,
+  width: 256,
+  height: 455,
+  parent: 'gameContainer',
+  pixelArt: true,
+  zoom: window.innerHeight / 455,
+  scene: {
+    preload: preload,
+    create: create,
+    update: update,
+  },
+  physics: {
+    default: 'arcade'
+  }
+};
+
+var game = new Phaser.Game(config)
 
 function preload () {
-  game.load.spritesheet('blocks', 'assets/images/blocks.png', 16, 16)
+  this.load.spritesheet('blocks', 'assets/images/blocks.png', { frameWidth: 16, frameHeight: 16 })
 
-  game.load.image('tilebg', 'assets/images/tilebg.png')
+  this.load.image('tilebg', 'assets/images/tilebg.png')
   console.log("preload")
 }
 
-var selectedItemIndex = 0
-var itemCostStr = '...'
-var uiText
-var uiIcon
-var UI_BACK_POS = {x: (-448 + 0), y: (-252 + 0)}
-var UI_ICON_POS = {x: (-448 + 15), y: (-252 + 36)}
-var UI_TEXT_POS = {x: (-448 + 60), y: (-252 + 30)}
-var clickUsedByUI = false
-
 function create () {
-  game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+  console.log(this)
   Kii.initializeWithSite("u3hcavh35j65", "2d2df3c7956c4a22911e586523c9e469", KiiSite.US)
+  // set up animations
+  this.anims.create({
+    key: 'all',
+    frames: this.anims.generateFrameNumbers('blocks'),
+    frameRate: 0,
+  });
+  // end set up animations
 
-  game.physics.startSystem(Phaser.Physics.ARCADE)
-  game.world.setBounds(0, 0, 256, 455)
-
-  spaceBG = game.add.tileSprite(0, 0, 256, 455, 'tilebg')
+  spaceBG = this.add.tileSprite(128, 227.5, 256, 455, 'tilebg')
   /*
   spaceFG = game.add.tileSprite(0, 0, 513, 912, 'spaceFG')
   spaceFG.fixedToCamera = true
   */
 
-  window.blocks = game.add.group();
-  itemGroup = game.add.group();
+  window.blocks = this.add.group();
+  for (var r = 0; r < Block.NUM_BLOCKS.y; r++) {
+    for (var c = 0; c < Block.NUM_BLOCKS.x; c++) {
+      var block = new Block(blocks, c, r, "blah")
+    }
+  }
 
-  planetGroup = game.add.group();
-
-  playerGroup = game.add.group();
-  playerGroup.enableBody = true;
-  window.uiGroup = game.add.group();
+  window.uiGroup = this.add.group();
   uiGroup.fixedToCamera = true
 
-  uiText = uiGroup.create(250, 150, "pressshout")
-  uiText.anchor.setTo(0.5, 0.5)
-  uiText.inputEnabled = true;
-  uiText.events.onInputDown.add(clickShout, uiText);
+  //uiText = uiGroup.create(250, 150, "pressshout")
+  //uiText.anchor.setTo(0.5, 0.5)
+  //uiText.inputEnabled = true;
+  //uiText.events.onInputDown.add(clickShout, uiText);
+  window.clickUsedByUI = false
 }
 
 function onConfirmID (data) {
@@ -142,34 +155,18 @@ var MAXKEYCOUNT = 8
 var keyCountdown = MAXKEYCOUNT
 var ZERO_POINT = new Phaser.Geom.Point(0, 0)
 function update () {
-  for (var i = 0; i < glob.intermittents.length; i++) {
-    glob.intermittents[i].update()
-    if (glob.intermittents[i].finished) {
-        glob.intermittents.splice(i, 1)
-        i--
-    }
-  }
-
-  spaceBG.tilePosition.x = -game.camera.x / 3
-  spaceBG.tilePosition.y = -game.camera.y / 3
-  spaceFG.tilePosition.x = -game.camera.x
-  spaceFG.tilePosition.y = -game.camera.y
-  //uiGroup.x = game.camera.x - UI_BACK_POS.x
-  //uiGroup.y = game.camera.y - UI_BACK_POS.y
-
-  updateUI()
+  this.events.emit('update')
+  updateUI.call(this)
 }
 
 function updateUI () {
-  if (!game.input.activePointer.isDown) {
+  if (!this.input.activePointer.isDown) {
     clickUsedByUI = false
   }
 }
 
-function render () {
-
-}
-
+// TODO maybe use this code for getting blocks by ID
+/*
 function planetByID (planetID) {
   for (var i = 0; i < glob.planets.length; i++) {
     if (glob.planets[i].planetID === planetID) {
@@ -178,3 +175,4 @@ function planetByID (planetID) {
   }
   return null
 }
+*/
