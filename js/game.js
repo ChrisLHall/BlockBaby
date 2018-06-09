@@ -4,7 +4,8 @@ var game = new Phaser.Game(256, 455, Phaser.AUTO, 'gameContainer',
 function preload () {
   game.load.spritesheet('blocks', 'assets/images/blocks.png', 16, 16)
 
-  //game.load.image('spaceBG', 'assets/images/starfield.png')
+  game.load.image('tilebg', 'assets/images/tilebg.png')
+  console.log("preload")
 }
 
 var selectedItemIndex = 0
@@ -19,16 +20,12 @@ var clickUsedByUI = false
 function create () {
   game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
   Kii.initializeWithSite("u3hcavh35j65", "2d2df3c7956c4a22911e586523c9e469", KiiSite.US)
-  // Start listening for events
-  setEventHandlers()
 
   game.physics.startSystem(Phaser.Physics.ARCADE)
   game.world.setBounds(0, 0, 256, 455)
 
-  // Our tiled scrolling background
+  spaceBG = game.add.tileSprite(0, 0, 256, 455, 'tilebg')
   /*
-  spaceBG = game.add.tileSprite(0, 0, 513, 912, 'spaceBG')
-  spaceBG.fixedToCamera = true
   spaceFG = game.add.tileSprite(0, 0, 513, 912, 'spaceFG')
   spaceFG.fixedToCamera = true
   */
@@ -40,7 +37,7 @@ function create () {
 
   playerGroup = game.add.group();
   playerGroup.enableBody = true;
-  uiGroup = game.add.group();
+  window.uiGroup = game.add.group();
   uiGroup.fixedToCamera = true
 
   uiText = uiGroup.create(250, 150, "pressshout")
@@ -152,7 +149,7 @@ function update () {
         i--
     }
   }
-  
+
   spaceBG.tilePosition.x = -game.camera.x / 3
   spaceBG.tilePosition.y = -game.camera.y / 3
   spaceFG.tilePosition.x = -game.camera.x
@@ -181,4 +178,3 @@ function planetByID (planetID) {
   }
   return null
 }
-
