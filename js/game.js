@@ -69,6 +69,12 @@ function create () {
     }
   });
 
+  this.input.on('dragend', function (pointer, gameObj) {
+    if (gameObj.obj && gameObj.obj.dragEnd) {
+      gameObj.obj.dragEnd()
+    }
+  }, this);
+
   window.clickUsedByUI = false
 }
 
@@ -168,7 +174,7 @@ var MAXKEYCOUNT = 8
 var keyCountdown = MAXKEYCOUNT
 var ZERO_POINT = new Phaser.Geom.Point(0, 0)
 function update () {
-  this.events.emit('update')
+  //this.events.emit('update')
   updateUI.call(this)
 }
 
