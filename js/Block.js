@@ -60,3 +60,11 @@ Block.find = function (x, y) {
     }
   }
 }
+
+Block.getBlockPos = function (px, py) {
+  var x = Math.floor((px - Block.OFFSET.x) / 32)
+  var y = Math.floor((py - Block.OFFSET.y) / 32)
+  x = Phaser.Math.Clamp(x, 0, Block.NUM_BLOCKS.x)
+  y = Phaser.Math.Clamp(y, 0, Block.NUM_BLOCKS.y)
+  return {x: x, y: y}
+}
