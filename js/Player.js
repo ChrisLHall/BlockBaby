@@ -1,102 +1,78 @@
-;(function() {
-  var Player = function (startX, startY, startPlayerID, startSocket) {
-    var x = startX
-    var y = startY
-    var vx = 0
-    var vy = 0
-    var angle = 0
-    var playerID = startPlayerID
-    var kiiObj = null
-    var socket = startSocket
-    var info = {
+var Player = function (playerID, group, startX, startY, playerInfo) {
+  this.playerID = playerID
 
-    }
+  this.gameObj = group.create(startX, startY, 'playerbee')
+  this.gameObj.animations.add("fly", [0, 1], 10, true);
+  this.gameObj.animations.play("fly")
+  this.gameObj.anchor.setTo(0.5, 0.5)
+  this.gameObj.bringToTop()
+  glob.intermittents.push(new IntermittentUpdater(this, function () {
+    socket.emit('move player', { x: this.targetPos.x, y: this.targetPos.y, angle: this.gameObj.angle })
+  }, 30))
 
-    // Getters and setters
-    var getX = function () {
-      return x
-    }
+  this.gameObj.body.collideWorldBounds = true
+  this.gameObj.body.immovable = true
 
-    var getY = function () {
-      return y
-    }
+  this.targetPos = new Phaser.Point(startX, startY)
+  this.lerpSpeed = 5
 
-    var setX = function (newX) {
-      x = newX
-    }
+  this.targetPlanetObj = null
+  this.sittingOnPlanetObj = null
 
-    var setY = function (newY) {
-      y = newY
-    }
+  this.setInfo(playerInfo)
+}
 
-    var getVX = function () {
-      return vx
-    }
-
-    var getVY = function () {
-      return vy
-    }
-
-    var setVX = function (newVX) {
-      vx = newVX
-    }
-
-    var setVY = function (newVY) {
-      vy = newVY
-    }
-
-    var getAngle = function () {
-      return angle
-    }
-
-    var setAngle = function (newAngle) {
-      angle = newAngle
-    }
-
-    // Define which variables and methods can be accessed
-    return {
-      getX: getX,
-      getY: getY,
-      setX: setX,
-      setY: setY,
-      getVX: getVX,
-      getVY: getVY,
-      setVX: setVX,
-      setVY: setVY,
-      getAngle: getAngle,
-      setAngle: setAngle,
-      playerID: playerID,
-      info: info,
-      kiiObj: kiiObj,
-      socket: socket,
-    }
+Player.colors = [0xffffff, 0xaaffaa, 0xffccff]
+Player.prototype.setInfo = function (info) {
+  CommonUtil.validate(info, Player.generateNewInfo(this.playerID))
+  this.info = info
+  if (null != this.info) {
+    this.gameObj.tint = Player.colors[this.info.color];
   }
+}
 
-  Player.generateNewInfo = function (playerID) {
-    return {
-      powerup: {
-        type: "none",
-        expiresAt: 0
-      },
-      color: Math.floor(Math.random() * 3),
-      inventory: [
-        {
-          type: "empty"
-        },
-        {
-          type: "empty"
-        },
-        {
-          type: "empty"
-        }
-      ],
-      playerid: playerID
-    }
-  }
-
-  if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
-    module.exports = Player
+Player.prototype.targetPlanet = function (planet) {
+  if (null != planet) {
+    this.targetPos = planet.gameObj.position
+    this.targetPlanetObj = planet
   } else {
-    window.Player = Player
+    this.targetPlanetObj = null
   }
-})();
+}
+
+Player.prototype.exists = function () {
+  return this.gameObj.exists
+}
+
+Player.prototype.update = function () {
+  //  only move when you click
+  var clickPoint = new Phaser.Point(game.input.activePointer.worldX, game.input.activePointer.worldY)
+  if (!clickUsedByUI && game.input.activePointer.isDown
+      && game.input.activePointer.duration > 50
+      && Phaser.Point.subtract(clickPoint, this.gameObj.position)
+      .getMagnitude() > 70) {
+    //game.physics.arcade.moveToPointer(this.gameObj, 300);
+    this.targetPos = clickPoint
+    this.targetPlanet(null)
+    this.sittingOnPlanetObj = null
+  }
+
+  var delta = Phaser.Point.subtract(this.targetPos, this.gameObj.position)
+  if (delta.getMagnitude() > this.lerpSpeed) {
+    delta.normalize()
+    delta.multiply(this.lerpSpeed, this.lerpSpeed)
+    this.gameObj.angle = Math.atan2(delta.y, delta.x) * Phaser.Math.RAD_TO_DEG
+  } else {
+    // arrived
+    if (null != this.targetPlanetObj) {
+      this.sittingOnPlanetObj = this.targetPlanetObj
+      this.targetPlanet(null)
+    }
+  }
+  this.gameObj.x += delta.x
+  this.gameObj.y += delta.y
+
+  if (null != this.sittingOnPlanetObj) {
+    this.gameObj.angle += this.sittingOnPlanetObj.info.rotSpeed
+  }
+}
