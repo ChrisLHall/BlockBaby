@@ -49,59 +49,6 @@ function create () {
   uiText.events.onInputDown.add(clickShout, uiText);
 }
 
-function clickShout () {
-  clickUsedByUI = true // ALWAYS DO THIS FIRST
-  if (null != player) {
-    socket.emit('shout', {playerID: player.playerID})
-  }
-}
-
-function onShout (data) {
-  var shout = new Shout(data.playerID)
-  glob.shouts.push(shout)
-}
-
-function setEventHandlers () {
-  // Socket connection successful
-  socket.on('connect', onSocketConnected)
-
-  // Socket disconnection
-  socket.on('disconnect', onSocketDisconnect)
-
-  // log in with cached ID
-  socket.on('confirm id', onConfirmID)
-  // New player message received
-  socket.on('new player', onNewPlayer)
-  // Player move message received
-  socket.on('move player', onMovePlayer)
-  // Player removed message received
-  socket.on('remove player', onRemovePlayer)
-
-  socket.on('server tick', onServerTick)
-
-  socket.on('update player info', onUpdatePlayerInfo)
-  socket.on('update planet info', onUpdatePlanetInfo)
-
-  socket.on('shout', onShout)
-  socket.on('chat message', onReceiveChat)
-  // server side only
-  //socket.on('change tile', onChangeTile)
-}
-
-// Socket connected
-function onSocketConnected () {
-  console.log('Connected to socket server')
-
-  var preferredID = window.localStorage.getItem("preferredID")
-  // Send local player data to the game server
-  socket.emit('new player', { preferredID: preferredID, x: startX, y: startY })
-}
-
-// Socket disconnected
-function onSocketDisconnect () {
-  console.log('Disconnected from socket server')
-}
-
 function onConfirmID (data) {
   console.log("confirmed my ID: " + data.playerID)
   window.localStorage.setItem("preferredID", data.playerID)
@@ -137,72 +84,6 @@ function tryKiiLogin (playerID, successCallback) {
   });
 }
 
-// New player
-function onNewPlayer (data) {
-  console.log('New player connected:', data.playerID)
-
-  // Add new player to the remote players array
-  var remote = new RemotePlayer(data.playerID, playerGroup, data.x, data.y)
-  glob.otherPlayers.push(remote)
-  queryPlayerInfo(remote, data.playerID)
-}
-
-// Move player
-function onMovePlayer (data) {
-  var movePlayer = playerByID(data.playerID)
-
-  // Player not found
-  if (null == movePlayer) {
-    console.log('Player not found: ', data.playerID)
-    return
-  }
-
-  movePlayer.setTargetPos(data.x, data.y)
-  movePlayer.gameObj.angle = data.angle
-}
-
-// Remove player
-function onRemovePlayer (data) {
-  var removePlayer = playerByID(data.playerID)
-
-  // Player not found
-  if (!removePlayer) {
-    console.log('Player not found: ', data.playerID)
-    return
-  }
-
-  playerGroup.remove(removePlayer.gameObj)
-  removePlayer.gameObj.kill()
-
-  // Remove player from array
-  glob.otherPlayers.splice(glob.otherPlayers.indexOf(removePlayer), 1)
-}
-
-function onServerTick (data) {
-  glob.currentServerTick = data.serverTicks
-}
-
-function onUpdatePlayerInfo (data) {
-  if (null != player && data.playerID === player.playerID) {
-    queryPlayerInfo(player, data.playerID)
-  } else {
-    var otherPlayer = playerByID(data.playerID)
-    if (null != otherPlayer) {
-      queryPlayerInfo(otherPlayer, data.playerID)
-    }
-  }
-}
-
-function onUpdatePlanetInfo (data) {
-  var planet = planetByID(data.planetID)
-  if (null == planet) {
-    console.log("Creating new planet to query: " + data.planetID)
-    var fakeInfo = Planet.generateNewInfo(data.planetID, -4000, -4000, "")
-    var planet = new LocalPlanet(data.planetID, planetGroup, fakeInfo) // create offscreen
-    glob.planets.push(planet)
-  }
-  queryPlanetInfo(planet, data.planetID)
-}
 
 function queryPlayerInfo (playerObj, playerID) {
   if (null == playerObj) {
@@ -258,49 +139,12 @@ function queryPlanetInfo(planetObj, planetID) {
   });
 }
 
-function queryAllPlanets() {
-  for (var i = 0; i < glob.planets.length; i++) {
-    glob.planets[i].gameObj.destroy()
-  }
-  glob.planets = []
-  var queryObject = KiiQuery.queryWithClause(null);
-  queryObject.sortByDesc("_created");
-
-  var bucket = Kii.bucketWithName("Planets");
-  bucket.executeQuery(queryObject).then(function (params) {
-    var queryPerformed = params[0];
-    var result = params[1];
-    var nextQuery = params[2]; // if there are more results
-    console.log("Successfully queried number of planets: " + result.length)
-    for (var i = 0; i < result.length; i++) {
-      var planetInfo = result[i]._customInfo
-      var planet = new LocalPlanet(planetInfo.planetid, planetGroup, planetInfo)
-      glob.planets.push(planet)
-    }
-  }).catch(function (error) {
-    var errorString = "" + error.code + ":" + error.message;
-    console.log("All Planets query failed, unable to execute query: " + errorString);
-  });
-}
-
-
-function getTileOrItem (tilesOrItems, x, y) {
-  return tilesOrItems[x.toString() + ',' + y.toString]
-}
-
-function setTileOrItem (tilesOrItems, x, y, id) {
-  tilesOrItems[x.toString() + ',' + y.toString] = id
-}
-
 var MAXCOUNT = 20
 var countdown = MAXCOUNT
 var MAXKEYCOUNT = 8
 var keyCountdown = MAXKEYCOUNT
 var ZERO_POINT = new Phaser.Geom.Point(0, 0)
 function update () {
-  if (null != player) {
-    player.update()
-  }
   for (var i = 0; i < glob.intermittents.length; i++) {
     glob.intermittents[i].update()
     if (glob.intermittents[i].finished) {
@@ -308,15 +152,7 @@ function update () {
         i--
     }
   }
-  for (var i = 0; i < glob.otherPlayers.length; i++) {
-    glob.otherPlayers[i].update()
-  }
-  for (var i = 0; i < glob.planets.length; i++) {
-    glob.planets[i].update()
-  }
-  for (var i = 0; i < glob.shouts.length; i++) {
-    glob.shouts[i].update()
-  }
+  
   spaceBG.tilePosition.x = -game.camera.x / 3
   spaceBG.tilePosition.y = -game.camera.y / 3
   spaceFG.tilePosition.x = -game.camera.x
@@ -337,15 +173,6 @@ function render () {
 
 }
 
-function playerByID (playerID) {
-  for (var i = 0; i < glob.otherPlayers.length; i++) {
-    if (glob.otherPlayers[i].playerID === playerID) {
-      return glob.otherPlayers[i]
-    }
-  }
-  return null
-}
-
 function planetByID (planetID) {
   for (var i = 0; i < glob.planets.length; i++) {
     if (glob.planets[i].planetID === planetID) {
@@ -355,7 +182,3 @@ function planetByID (planetID) {
   return null
 }
 
-// TEMP CHAT SYSTEM
-function onReceiveChat(msg) {
-    $('#messages').prepend($('<li>').text(msg));
-}
