@@ -25,6 +25,7 @@ var Customer = function (group, x, y) {
     wordWrap: { width: 250 }
   }).setOrigin(.5, 0)
   this.reviewAnimCountdown = 0
+  this.reviewColorIdx = 0
   this.updateReviews()
 
   this.initRandomCustomer()
@@ -163,8 +164,16 @@ Customer.prototype.updateReviews = function () {
       reviewNumStr = "1 review"
     }
     str = str.replace("{0}", totalScore.toFixed(1)).replace("{1}", reviewNumStr)
+
+    var colorList = Customer.COLORS_FOR_RATINGS[Math.floor(totalScore) - 1]
+    this.reviewColorIdx++
+    if (this.reviewColorIdx >= colorList.length) {
+      this.reviewColorIdx = 0
+    }
+    color = colorList[this.reviewColorIdx]
   }
   this.reviewText.setText(str)
+  this.reviewText.setColor(color)
 }
 
 Customer.TYPES = {
@@ -207,10 +216,10 @@ Customer.SCORES_FOR_RATINGS = [
 
 // shuffle colors for 1* thru 6* (which means, ALL 6 star ratings)
 Customer.COLORS_FOR_RATINGS = [
-  [],
-  [],
-  [],
-  [],
-  [],
-  []
+  ['#afafaf'],
+  ['#cfcfcf'],
+  ['#cf2f2f'],
+  ['#dfdf5f'],
+  ['#5fff5f', '#dfdf6f'],
+  ['#5fffff', '#ff5fff', '#3f3fff']
 ]
