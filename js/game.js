@@ -45,9 +45,11 @@ function create () {
   window.blocks = this.add.group();
   for (var r = 0; r < Block.NUM_BLOCKS.y; r++) {
     for (var c = 0; c < Block.NUM_BLOCKS.x; c++) {
-      var block = new Block(blocks, c, r, "blah")
+      var block = new Block(blocks, c, r, Util.listRand(Block.TYPE_LIST))
     }
   }
+
+  window.outlines = this.add.graphics();
 
   window.uiGroup = this.add.group();
   uiGroup.fixedToCamera = true
