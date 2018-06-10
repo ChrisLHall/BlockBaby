@@ -59,9 +59,7 @@ Block.prototype.dragEnd = function () {
   if (sandwiches.length > 0) {
     window.customer.sandwichesScored()
   }
-  // rescan
-  var sandwiches = Block.scanForSandwiches()
-  Block.drawSandwichOutlines(sandwiches)
+  Block.drawSandwichOutlines([])
 }
 
 Block.prototype.tweenToPos = function (duration) {

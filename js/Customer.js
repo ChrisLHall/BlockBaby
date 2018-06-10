@@ -56,6 +56,7 @@ Customer.prototype.initRandomCustomer = function () {
 
   this.remainingOrders = 4
   this.finished = false
+  this.setSize(1)
   this.updateAnim()
   this.updateText()
 }
@@ -88,6 +89,16 @@ Customer.prototype.sandwichesScored = function () {
 
   if (this.finished) {
     // add review
+    var rating = 1
+    for (var j = 0; j < Customer.SCORES_FOR_RATINGS.length; j++) {
+      var scoreCap = Customer.SCORES_FOR_RATINGS[j]
+      if (totalScore <= scoreCap) {
+        break
+      } else {
+        rating = j + 2 // if score is above highest maximum, get a 6* rating
+      }
+    }
+    this.whelpReviews.push(rating)
     this.updateReviews()
     this.tweenNewCustomer()
   }
@@ -183,4 +194,23 @@ Customer.DEMANDS = [
   "ON THE DOUBLE",
   "Hurry. I'm late for a meeting!",
   "I'll be here I guess"
+]
+
+// max score for 1* thru 5* (can get up to 6*)
+Customer.SCORES_FOR_RATINGS = [
+  0,
+  2,
+  5,
+  30,
+  60
+]
+
+// shuffle colors for 1* thru 6* (which means, ALL 6 star ratings)
+Customer.COLORS_FOR_RATINGS = [
+  [],
+  [],
+  [],
+  [],
+  [],
+  []
 ]
