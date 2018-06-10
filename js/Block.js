@@ -17,26 +17,13 @@ var Block = function (group, xIndex, yIndex, type) {
   this.scene.input.setDraggable(this.gameObj);
 
 
-  this.scene.events.on('update', Block.prototype.update, this)
-  /*
-  this.input.on('dragstart', function (pointer, gameObject) {
+  //this.scene.events.on('update', this.update, this)
 
-      this.children.bringToTop(gameObject);
-
-  }, this);
-
-  this.input.on('drag', function (pointer, gameObject, dragX, dragY) {
-
-      gameObject.x = dragX;
-      gameObject.y = dragY;
-
-  });
-  */
-  this.tweenToPos(200)
+  this.tweenToPos(500 + Math.random() * 200)
 }
 
 Block.NUM_BLOCKS = {x: 7, y: 7}
-Block.OFFSET = {x: 32, y: 180}
+Block.OFFSET = {x: 32, y: 202}
 
 Block.prototype.update = function () {
 
@@ -69,6 +56,9 @@ Block.prototype.dragEnd = function () {
   var sandwiches = Block.scanForSandwiches()
   Block.scoreSandwiches(sandwiches)
   Block.destroySandwiches(sandwiches)
+  if (sandwiches.length > 0) {
+    window.customer.sandwichesScored()
+  }
   // rescan
   var sandwiches = Block.scanForSandwiches()
   Block.drawSandwichOutlines(sandwiches)
@@ -103,9 +93,10 @@ Block.prototype.tweenDestroy = function () {
   var _this = this
   this.scene.tweens.add({
     targets: this.gameObj,
-    x: { value: 210, delay: delay, duration: duration, ease: 'Power4.easeIn' },
-    y: { value: 10, delay: delay, duration: duration, ease: 'Power4.easeIn' },
-    alpha: { value: 0, delay: delay, duration: duration, ease: 'Power4.easeOut' },
+    x: { value: 70, delay: delay, duration: duration, ease: 'Power4.easeIn' },
+    y: { value: 120, delay: delay, duration: duration, ease: 'Power4.easeIn' },
+    scaleX: { value: 0, delay: delay, duration: duration, ease: 'Power4.easeOut' },
+    scaleY: { value: 0, delay: delay, duration: duration, ease: 'Power4.easeOut' },
     onComplete: function () { _this.destroy() },
   })
 }
@@ -152,7 +143,7 @@ Block.scanForSandwiches = function () {
   var sandwiches = []
   var map = Block.createBlockTypeMap()
   var marked = Util.createBoolMap(Block.NUM_BLOCKS.x, Block.NUM_BLOCKS.y)
-  for (var y = 0; y < Block.NUM_BLOCKS.y - 3; y++) {
+  for (var y = 0; y <= Block.NUM_BLOCKS.y - 3; y++) {
     for (var x = 0; x < Block.NUM_BLOCKS.x; x++) {
       for (var width = Block.NUM_BLOCKS.x - x; width >= 1; width--) {
         for (var height = 3; height <= Block.NUM_BLOCKS.y - y; height++) {
@@ -219,7 +210,6 @@ Block.markSandwich = function (marked, sandwich) {
   var y = sandwich.y
   var width = sandwich.width
   var height = sandwich.height
-  console.log("marking a sandwich @ x:" + x + " y: " + y + " height:" + height)
   for (var j = 0; j < width; j++) {
     for (var k = 0; k < height; k++) {
       marked[y + k][x + j] = true
@@ -250,7 +240,7 @@ Block.scoreSandwiches = function (sandwiches) {
         var type = map[sandwich.y + k][sandwich.x + j]
         var centerDist = Math.abs(j - centerJ) + Math.abs(k - centerK)
         var centerBonus = maxCenterDist - centerDist
-        var amount = 1 * Math.pow(1.2, centerBonus)
+        var amount = 1 + centerBonus
         window.inventory[type] += amount
       }
     }
@@ -278,6 +268,16 @@ Block.destroySandwiches = function (sandwiches) {
         }
         var block = new Block(window.blocks, x, y, Util.listRand(Block.TYPE_LIST))
       }
+    }
+  }
+}
+
+Block.destroyAllAndRefresh = function () {
+  for (var x = 0; x < Block.NUM_BLOCKS.x; x++) {
+    for (var y = 0; y < Block.NUM_BLOCKS.y; y++) {
+      var existing = Block.find(x, y)
+      existing.destroy()
+      var block = new Block(window.blocks, x, y, Util.listRand(Block.TYPE_LIST))
     }
   }
 }

@@ -1,17 +1,15 @@
 var UIButton = function (group, animName, frame, screenX, screenY, touchAction) {
+  this.group = group
+  this.scene = group.scene
   this.touchAction = touchAction
 
   this.gameObj = group.create(screenX, screenY, animName)
   this.gameObj.obj = this
-  this.gameObj.animations.add("button", [frame], 1, true)
-  this.gameObj.animations.play("button")
-  this.gameObj.anchor.setTo(0.5, 0.5)
-
-  this.gameObj.inputEnabled = true;
-  this.gameObj.events.onInputDown.add(this.pressed, this);
+  this.gameObj.setInteractive().setOrigin(0.5)
+  this.gameObj.anims.load(animName, frame)
 }
 
-UIButton.prototype.pressed = function() {
+UIButton.prototype.onClick = function(pointer) {
   clickUsedByUI = true // ALWAYS DO THIS FIRST
-  this.touchAction.call(this)
+  this.touchAction.call(this, pointer)
 }

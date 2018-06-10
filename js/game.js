@@ -20,7 +20,8 @@ var game = new Phaser.Game(config)
 
 function preload () {
   this.load.spritesheet('blocks', 'assets/images/blocks.png', { frameWidth: 16, frameHeight: 16 })
-
+  this.load.spritesheet('customer', 'assets/images/customer.png', { frameWidth: 32, frameHeight: 32 })
+  this.load.spritesheet('buttons', 'assets/images/buttons.png', { frameWidth: 32, frameHeight: 32 })
   this.load.image('tilebg', 'assets/images/tilebg.png')
   console.log("preload")
 }
@@ -34,6 +35,16 @@ function create () {
     frames: this.anims.generateFrameNumbers('blocks'),
     frameRate: 0,
   });
+  this.anims.create({
+    key: 'customer',
+    frames: this.anims.generateFrameNumbers('customer'),
+    frameRate: 0,
+  })
+  this.anims.create({
+    key: 'buttons',
+    frames: this.anims.generateFrameNumbers('buttons'),
+    frameRate: 0,
+  })
   // end set up animations
 
   spaceBG = this.add.tileSprite(128, 227.5, 256, 455, 'tilebg')
@@ -50,8 +61,7 @@ function create () {
   }
 
   window.outlines = this.add.graphics();
-  var sandwiches = Block.scanForSandwiches()
-  Block.drawSandwichOutlines(sandwiches)
+  Block.drawSandwichOutlines([])
 
   window.inventory = {
     "leaf": 0,
@@ -60,25 +70,33 @@ function create () {
     "bug": 0,
   }
 
+  var textX = 240
+  var textY = 90
+  var textYSpace = 14
   window.uiGroup = this.add.group();
+  window.customer = new Customer(window.uiGroup, 70, 144)
+  var resetButton = new UIButton(window.uiGroup, 'buttons', 0, 224, 432, function (pointer) {
+    Block.destroyAllAndRefresh()
+    Block.drawSandwichOutlines([])
+  })
   window.uiText = {
-    "leaf": this.add.text(210, 12, "", {
-      fontSize: '16px',
+    "leaf": this.add.text(textX, textY + 0 * textYSpace, "", {
+      fontSize: '12px',
       align: 'right',
       color: '#3fff3f',
     }).setOrigin(1, 0),
-    "meat": this.add.text(210, 36, "", {
-      fontSize: '16px',
+    "meat": this.add.text(textX, textY + 1 * textYSpace, "", {
+      fontSize: '12px',
       align: 'right',
       color: '#ff3f3f',
     }).setOrigin(1, 0),
-    "egg": this.add.text(210, 60, "", {
-      fontSize: '16px',
+    "egg": this.add.text(textX, textY + 2 * textYSpace, "", {
+      fontSize: '12px',
       align: 'right',
       color: '#3f3fff',
     }).setOrigin(1, 0),
-    "bug": this.add.text(210, 84, "", {
-      fontSize: '16px',
+    "bug": this.add.text(textX, textY + 3 * textYSpace, "", {
+      fontSize: '12px',
       align: 'right',
       color: '#df3fff',
     }).setOrigin(1, 0),
@@ -110,6 +128,12 @@ function create () {
   this.input.on('dragend', function (pointer, gameObj) {
     if (gameObj.obj && gameObj.obj.dragEnd) {
       gameObj.obj.dragEnd()
+    }
+  }, this);
+
+  this.input.on('gameobjectdown', function (pointer, gameObj) {
+    if (gameObj.obj && gameObj.obj.onClick) {
+      gameObj.obj.onClick(pointer)
     }
   }, this);
 
@@ -219,7 +243,13 @@ function update () {
 function updateUI () {
   for (var key in window.uiText) {
     if (window.uiText.hasOwnProperty(key)) {
-      var str = key + ": " + window.inventory[key]
+      var str = key
+      if (window.customer.likes === key) {
+        str += " (likes)"
+      } else if (window.customer.hates === key) {
+        str += " (hates)"
+      }
+      str += ": " + window.inventory[key]
       window.uiText[key].setText(str)
     }
   }
@@ -228,15 +258,3 @@ function updateUI () {
     clickUsedByUI = false
   }
 }
-
-// TODO maybe use this code for getting blocks by ID
-/*
-function planetByID (planetID) {
-  for (var i = 0; i < glob.planets.length; i++) {
-    if (glob.planets[i].planetID === planetID) {
-      return glob.planets[i]
-    }
-  }
-  return null
-}
-*/
