@@ -45,14 +45,50 @@ function create () {
   window.blocks = this.add.group();
   for (var r = 0; r < Block.NUM_BLOCKS.y; r++) {
     for (var c = 0; c < Block.NUM_BLOCKS.x; c++) {
-      var block = new Block(blocks, c, r, Util.listRand(Block.TYPE_LIST))
+      var block = new Block(window.blocks, c, r, Util.listRand(Block.TYPE_LIST))
     }
   }
 
   window.outlines = this.add.graphics();
+  var sandwiches = Block.scanForSandwiches()
+  Block.drawSandwichOutlines(sandwiches)
+
+  window.inventory = {
+    "leaf": 0,
+    "meat": 0,
+    "egg": 0,
+    "bug": 0,
+  }
 
   window.uiGroup = this.add.group();
-  uiGroup.fixedToCamera = true
+  window.uiText = {
+    "leaf": this.add.text(210, 12, "", {
+      fontSize: '16px',
+      align: 'right',
+      color: '#3fff3f',
+    }).setOrigin(1, 0),
+    "meat": this.add.text(210, 36, "", {
+      fontSize: '16px',
+      align: 'right',
+      color: '#ff3f3f',
+    }).setOrigin(1, 0),
+    "egg": this.add.text(210, 60, "", {
+      fontSize: '16px',
+      align: 'right',
+      color: '#3f3fff',
+    }).setOrigin(1, 0),
+    "bug": this.add.text(210, 84, "", {
+      fontSize: '16px',
+      align: 'right',
+      color: '#df3fff',
+    }).setOrigin(1, 0),
+  }
+  for (var key in window.uiText) {
+    if (window.uiText.hasOwnProperty(key)) {
+      window.uiGroup.add(window.uiText[key])
+    }
+  }
+  //uiGroup.fixedToCamera = true
 
   //uiText = uiGroup.create(250, 150, "pressshout")
   //uiText.anchor.setTo(0.5, 0.5)
@@ -181,6 +217,13 @@ function update () {
 }
 
 function updateUI () {
+  for (var key in window.uiText) {
+    if (window.uiText.hasOwnProperty(key)) {
+      var str = key + ": " + window.inventory[key]
+      window.uiText[key].setText(str)
+    }
+  }
+
   if (!this.input.activePointer.isDown) {
     clickUsedByUI = false
   }

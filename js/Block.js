@@ -8,9 +8,9 @@ var Block = function (group, xIndex, yIndex, type) {
   this.group = group
   this.scene = group.scene
   var pos = Block.getWorldPos(xIndex, yIndex)
-  this.gameObj = this.group.create(pos.x, pos.y, 'block')
+  this.gameObj = this.group.create(pos.x, pos.y - 100, 'block')
   var shape = new Phaser.Geom.Rectangle(0, 0, 16, 16)
-  this.gameObj.setInteractive(shape, Phaser.Geom.Rectangle.Contains).setScale(2).setOrigin(0.5)
+  this.gameObj.setInteractive(shape, Phaser.Geom.Rectangle.Contains).setScale(2).setOrigin(0.5).setAlpha(.1)
   this.gameObj.obj = this
   this.gameObj.anims.load('all', this.info.frame)
 
@@ -32,6 +32,7 @@ var Block = function (group, xIndex, yIndex, type) {
 
   });
   */
+  this.tweenToPos(200)
 }
 
 Block.NUM_BLOCKS = {x: 7, y: 7}
@@ -54,29 +55,37 @@ Block.prototype.drag = function (dragX, dragY) {
     var blockAtPos = Block.find(newPos.x, newPos.y)
     blockAtPos.x = this.x
     blockAtPos.y = this.y
-    blockAtPos.tweenToPos()
+    blockAtPos.tweenToPos(100)
     this.x = newPos.x
     this.y = newPos.y
-    Block.scanForSandwiches()
+    var sandwiches = Block.scanForSandwiches()
+    Block.drawSandwichOutlines(sandwiches)
   }
 }
 
 Block.prototype.dragEnd = function () {
   window.dragging = false
-  this.tweenToPos()
+  this.tweenToPos(100)
+  var sandwiches = Block.scanForSandwiches()
+  Block.scoreSandwiches(sandwiches)
+  Block.destroySandwiches(sandwiches)
+  // rescan
+  var sandwiches = Block.scanForSandwiches()
+  Block.drawSandwichOutlines(sandwiches)
 }
 
-Block.prototype.tweenToPos = function () {
+Block.prototype.tweenToPos = function (duration) {
   var newPos = Block.getWorldPos(this.x, this.y)
   //this.gameObj.x = newPos.x
   //this.gameObj.y = newPos.y
   this.scene.tweens.add({
-    targets: [this.gameObj],
+    targets: this.gameObj,
     x: newPos.x,
     y: newPos.y,
+    alpha: 1,
     delay: 0,
-    duration: 50,
-    ease: 'Power0',
+    duration: duration,
+    ease: 'Power1',
   });
 }
 
@@ -84,6 +93,21 @@ Block.prototype.destroy = function () {
   this.group.remove(this.gameObj, true, true)
   this.scene.events.off('update', this.update, this)
   Block.allBlocks.splice(Block.allBlocks.indexOf(this), 1)
+}
+
+Block.prototype.tweenDestroy = function () {
+  this.x = -1
+  this.y = -1
+  var duration = 1000
+  var delay = Math.random() * 100
+  var _this = this
+  this.scene.tweens.add({
+    targets: this.gameObj,
+    x: { value: 210, delay: delay, duration: duration, ease: 'Power4.easeIn' },
+    y: { value: 10, delay: delay, duration: duration, ease: 'Power4.easeIn' },
+    alpha: { value: 0, delay: delay, duration: duration, ease: 'Power4.easeOut' },
+    onComplete: function () { _this.destroy() },
+  })
 }
 
 Block.allBlocks = []
@@ -125,7 +149,6 @@ Block.createBlockTypeMap = function () {
 }
 
 Block.scanForSandwiches = function () {
-  // first, vertical sandwiches
   var sandwiches = []
   var map = Block.createBlockTypeMap()
   var marked = Util.createBoolMap(Block.NUM_BLOCKS.x, Block.NUM_BLOCKS.y)
@@ -142,14 +165,7 @@ Block.scanForSandwiches = function () {
       }
     }
   }
-  // next, horizontal sandwiches
-  window.outlines.clear()
-  window.outlines.lineStyle(2, 0xFF004F, 1);
-  for (var j = 0; j < sandwiches.length; j++) {
-    var sandwich = sandwiches[j]
-    var origin = Block.getWorldPos(sandwich.x, sandwich.y)
-    window.outlines.strokeRect(origin.x - 16, origin.y - 16, sandwich.width * 32, sandwich.height * 32)
-  }
+  return sandwiches
 }
 
 Block.checkSandwich = function(map, marked, sandwich) {
@@ -211,6 +227,61 @@ Block.markSandwich = function (marked, sandwich) {
   }
 }
 
+Block.drawSandwichOutlines = function (sandwiches) {
+  window.outlines.clear()
+  window.outlines.lineStyle(2, 0xFF004F, 1);
+  for (var j = 0; j < sandwiches.length; j++) {
+    var sandwich = sandwiches[j]
+    var origin = Block.getWorldPos(sandwich.x, sandwich.y)
+    window.outlines.strokeRect(origin.x - 16, origin.y - 16, sandwich.width * 32, sandwich.height * 32)
+  }
+}
+
+Block.scoreSandwiches = function (sandwiches) {
+  var map = Block.createBlockTypeMap()
+  for (var s = 0; s < sandwiches.length; s++) {
+    var sandwich = sandwiches[s]
+    var centerJ = Math.floor(sandwich.width / 2)
+    var centerK = Math.floor(sandwich.height / 2)
+    var maxCenterDist = centerJ + centerK - 1
+    for (var j = 0; j < sandwich.width; j++) {
+      for (var k = 1; k < sandwich.height - 1; k++) {
+        // don't count bread
+        var type = map[sandwich.y + k][sandwich.x + j]
+        var centerDist = Math.abs(j - centerJ) + Math.abs(k - centerK)
+        var centerBonus = maxCenterDist - centerDist
+        var amount = 1 * Math.pow(1.2, centerBonus)
+        window.inventory[type] += amount
+      }
+    }
+  }
+  // always round the inventory amounts
+  for (var key in window.inventory) {
+    if (window.inventory.hasOwnProperty(key)) {
+      window.inventory[key] = Math.round(window.inventory[key])
+    }
+  }
+}
+
+Block.destroySandwiches = function (sandwiches) {
+  for (var s = 0; s < sandwiches.length; s++) {
+    var sandwich = sandwiches[s]
+    for (var j = 0; j < sandwich.width; j++) {
+      for (var k = 0; k < sandwich.height; k++) {
+        var x = sandwich.x + j
+        var y = sandwich.y + k
+        var existing = Block.find(x, y)
+        if (existing.type === "bread") {
+          existing.destroy()
+        } else {
+          existing.tweenDestroy()
+        }
+        var block = new Block(window.blocks, x, y, Util.listRand(Block.TYPE_LIST))
+      }
+    }
+  }
+}
+
 Block.TYPES = {
   "bread": {
     frame: 0,
@@ -229,4 +300,4 @@ Block.TYPES = {
   },
 }
 
-Block.TYPE_LIST = ["bread", "leaf", "meat", "egg", "bug"]
+Block.TYPE_LIST = ["bread", "bread", "leaf", "meat", "egg", "bug"]
