@@ -34,6 +34,7 @@ var Customer = function (group, x, y) {
     backgroundColor: '#ff8faf',
   }).setOrigin(.5, 0).setAlpha(0)
   window.uiGroup.add(this.feedbackText)
+  this.feedbackTween = null
   this.reviewAnimCountdown = 0
   this.reviewColorIdx = 0
   this.updateReviews()
@@ -99,7 +100,7 @@ Customer.prototype.sandwichesScored = function () {
   }
   var feedback = '"Yuck"'
   if (totalScore > 0) {
-    feedback = '"Meh"'
+    feedback = '"Mmm."'
   }
   if (totalScore > 10) {
     feedback = '"Yum!"'
@@ -124,7 +125,8 @@ Customer.prototype.sandwichesScored = function () {
         rating = j + 2 // if score is above highest maximum, get a 6* rating
       }
     }
-    feedback += "\nThanks!\n" + rating.toString() + "⭐"
+    var thanks = (rating > 3 ? "Thanks!" : "Bye.")
+    feedback += "\n" + thanks + "\n" + rating.toString() + "⭐"
     this.whelpReviews.push(rating)
     this.updateReviews()
     this.tweenNewCustomer()
@@ -143,14 +145,16 @@ Customer.prototype.setSize = function (newSize) {
 }
 
 Customer.prototype.tweenFeedbackText = function (text) {
-  this.feedbackText.setDepth(100)
-  this.feedbackText.setText(text)
-  this.scene.tweens.add({
+  if (this.feedbackTween) {
+    this.feedbackTween.stop()
+  }
+  this.feedbackText.setDepth(10000).setText(text).setAlpha(0)
+  this.feedbackTween = this.scene.tweens.add({
     targets: this.feedbackText,
     alpha: 1,
     delay: 0,
     duration: 200,
-    hold: 1000,
+    hold: 800,
     ease: 'Power2.easeOut',
     yoyo: true,
   })

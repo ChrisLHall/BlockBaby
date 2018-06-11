@@ -238,7 +238,7 @@ Block.scoreSandwiches = function (sandwiches) {
         var type = map[sandwich.y + k][sandwich.x + j]
         var centerDist = Math.abs(j - centerJ) + Math.abs(k - centerK)
         var centerBonus = maxCenterDist - centerDist
-        var amount = 1 + centerBonus
+        var amount = (1 + centerBonus) * Block.TYPES[type].value
         window.inventory[type] += amount
       }
     }
