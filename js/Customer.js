@@ -52,6 +52,11 @@ Customer.prototype.update = function () {
 }
 
 Customer.prototype.initRandomCustomer = function () {
+  for (var key in window.inventory) {
+    if (window.inventory.hasOwnProperty(key)) {
+      window.inventory[key] = 0
+    }
+  }
   this.type = Util.listRand(Customer.TYPE_LIST)
   this.info = Customer.TYPES[this.type]
   this.age = 0
