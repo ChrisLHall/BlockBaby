@@ -45,6 +45,7 @@ Block.prototype.drag = function (dragX, dragY) {
     blockAtPos.tweenToPos(100)
     this.x = newPos.x
     this.y = newPos.y
+    window.slideSfx.play()
     var sandwiches = Block.scanForSandwiches()
     Block.drawSandwichOutlines(sandwiches)
   }
@@ -53,6 +54,7 @@ Block.prototype.drag = function (dragX, dragY) {
 Block.prototype.dragEnd = function () {
   window.dragging = false
   this.tweenToPos(100)
+  window.dingSfx.play()
   var sandwiches = Block.scanForSandwiches()
   Block.scoreSandwiches(sandwiches)
   Block.destroySandwiches(sandwiches)
@@ -95,7 +97,10 @@ Block.prototype.tweenDestroy = function () {
     y: { value: 120, delay: delay, duration: duration, ease: 'Power4.easeIn' },
     scaleX: { value: 0, delay: delay, duration: duration, ease: 'Power4.easeOut' },
     scaleY: { value: 0, delay: delay, duration: duration, ease: 'Power4.easeOut' },
-    onComplete: function () { _this.destroy() },
+    onComplete: function () {
+      window.popSfx.play()
+      _this.destroy()
+    },
   })
 }
 

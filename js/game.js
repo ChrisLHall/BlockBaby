@@ -23,12 +23,17 @@ function preload () {
   this.load.spritesheet('customer', 'assets/images/customer.png', { frameWidth: 32, frameHeight: 32 })
   this.load.spritesheet('buttons', 'assets/images/buttons.png', { frameWidth: 32, frameHeight: 32 })
   this.load.image('tilebg', 'assets/images/tilebg.png')
-  console.log("preload")
+  this.load.image('tut1', 'assets/images/tut1.png')
+  this.load.image('tut2', 'assets/images/tut2.png')
+  this.load.image('tut3', 'assets/images/tut3.png')
+
+  this.load.audio('slide', 'assets/sounds/slide.ogg')
+  this.load.audio('ding', 'assets/sounds/ding.ogg')
+  this.load.audio('pop', 'assets/sounds/pop.ogg')
+  this.load.audio('doorchime', 'assets/sounds/doorchime.ogg')
 }
 
 function create () {
-  console.log(this)
-  Kii.initializeWithSite("u3hcavh35j65", "2d2df3c7956c4a22911e586523c9e469", KiiSite.US)
   // set up animations
   this.anims.create({
     key: 'all',
@@ -79,6 +84,36 @@ function create () {
     Block.destroyAllAndRefresh()
     Block.drawSandwichOutlines([])
   })
+  window.mute = false
+  var _scene = this
+  window.muteButton = new UIButton(window.uiGroup, 'buttons', 1, 184, 432, function (pointer) {
+    window.mute = !window.mute
+    _scene.sound.setMute(window.mute)
+    window.muteButton.gameObj.setAlpha(window.mute ? .5 : 1)
+  })
+
+  window.tut = null
+  window.tutObj = null
+  window.tutButton = new UIButton(window.uiGroup, 'buttons', 2, 144, 432, function (pointer) {
+    if (window.tutObj) {
+      window.tutObj.destroy()
+    }
+    if (!window.tut) {
+      window.tut = "tut1"
+    } else if (window.tut === "tut1") {
+      window.tut = "tut2"
+    } else if (window.tut === "tut2") {
+      window.tut = "tut3"
+    } else {
+      window.tut = null
+    }
+    if (window.tut) {
+      window.tutButton.gameObj.setTint(0x00ffff)
+      window.tutObj = _scene.add.image(0, 0, window.tut).setOrigin(0)
+    } else {
+      window.tutButton.gameObj.setTint(0xffffff)
+    }
+  })
   window.uiText = {
     "leaf": this.add.text(textX, textY + 0 * textYSpace, "", {
       fontSize: '12px',
@@ -106,6 +141,11 @@ function create () {
       window.uiGroup.add(window.uiText[key])
     }
   }
+
+  window.slideSfx = this.sound.add('slide')
+  window.dingSfx = this.sound.add('ding')
+  window.popSfx = this.sound.add('pop')
+  window.doorChimeSfx = this.sound.add('doorchime')
   //uiGroup.fixedToCamera = true
 
   //uiText = uiGroup.create(250, 150, "pressshout")
@@ -140,107 +180,7 @@ function create () {
   window.clickUsedByUI = false
 }
 
-function onConfirmID (data) {
-  console.log("confirmed my ID: " + data.playerID)
-  window.localStorage.setItem("preferredID", data.playerID)
-
-  tryKiiLogin(data.playerID, function () {
-    player = new LocalPlayer(data.playerID, playerGroup, startX, startY, Player.generateNewInfo(data.playerID))
-
-    game.camera.follow(player.gameObj, Phaser.Camera.FOLLOW_TOPDOWN_TIGHT, 0.3, 0.3)
-    game.camera.focusOnXY(startX, startY)
-
-    queryPlayerInfo(player, player.playerID)
-    queryAllPlanets()
-  })
-}
-
-function tryKiiLogin (playerID, successCallback) {
-  var username = playerID;
-  var password = "password9001";
-  KiiUser.authenticate(username, password).then(function (user) {
-    console.log("Kii User authenticated: " + JSON.stringify(user));
-    successCallback()
-  }).catch(function (error) {
-    var errorString = error.message;
-    console.log("Unable to authenticate user: " + errorString + "...attempting signup");
-    var user = KiiUser.userWithUsername(username, password);
-    user.register().then(function (user) {
-      console.log("User registered: " + JSON.stringify(user));
-      successCallback()
-    }).catch(function(error) {
-      var errorString = "" + error.code + error.message;
-      console.log("Unable to register user: " + errorString + "... reload I guess?");
-    });
-  });
-}
-
-
-function queryPlayerInfo (playerObj, playerID) {
-  if (null == playerObj) {
-    return
-  }
-  var queryObject = KiiQuery.queryWithClause(KiiClause.equals("playerid", playerID));
-  queryObject.sortByDesc("_created");
-
-  var bucket = Kii.bucketWithName("PlayerInfo");
-  bucket.executeQuery(queryObject).then(function (params) {
-    var queryPerformed = params[0];
-    var result = params[1];
-    var nextQuery = params[2]; // if there are more results
-    if (result.length > 0) {
-      if (result.length > 1) {
-        console.log("Multiple PlayerInfos for " + playerID)
-      }
-      console.log(playerID + ": PlayerInfo query successful")
-      playerObj.setInfo(result[0]["_customInfo"])
-    } else {
-      console.log(playerID + ": PlayerInfo query failed, returned no objects")
-    }
-  }).catch(function (error) {
-    var errorString = "" + error.code + ":" + error.message;
-    console.log(playerID + ": PlayerInfo query failed, unable to execute query: " + errorString);
-  });
-}
-
-function queryPlanetInfo(planetObj, planetID) {
-  if (null == planetObj) {
-    return
-  }
-  var queryObject = KiiQuery.queryWithClause(KiiClause.equals("planetid", planetID));
-  queryObject.sortByDesc("_created");
-
-  var bucket = Kii.bucketWithName("Planets");
-  bucket.executeQuery(queryObject).then(function (params) {
-    var queryPerformed = params[0];
-    var result = params[1];
-    var nextQuery = params[2]; // if there are more results
-    if (result.length > 0) {
-      if (result.length > 1) {
-        console.log("Multiple Planets for " + planetID)
-      }
-      console.log(planetID + ": Planet query successful")
-      planetObj.setInfo(result[0]._customInfo)
-    } else {
-      console.log(planetID + ": Planet query failed, returned no objects")
-    }
-  }).catch(function (error) {
-    var errorString = "" + error.code + ":" + error.message;
-    console.log(planetID + ": Planet query failed, unable to execute query: " + errorString);
-  });
-}
-
-var MAXCOUNT = 20
-var countdown = MAXCOUNT
-var MAXKEYCOUNT = 8
-var keyCountdown = MAXKEYCOUNT
-var ZERO_POINT = new Phaser.Geom.Point(0, 0)
 function update () {
-  //this.events.emit('update')
-  updateUI.call(this)
-}
-
-function updateUI () {
   for (var key in window.uiText) {
     if (window.uiText.hasOwnProperty(key)) {
       var str = key

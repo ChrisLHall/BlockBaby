@@ -162,6 +162,7 @@ Customer.prototype.tweenFeedbackText = function (text) {
 
 Customer.prototype.tweenNewCustomer = function () {
   var _this = this
+  window.doorChimeSfx.play()
   this.scene.tweens.add({
     targets: this.gameObj,
     x: -100,
@@ -220,30 +221,57 @@ Customer.prototype.updateReviews = function () {
 Customer.TYPES = {
   "hen": {
     animIdx: 0,
-    names: ["Georgina", "Monique", "Alex", "Ellen"],
+    names: ["Georgina", "Monique", "Alex", "Ellen", "Helga", "Claudette", "Meep"],
   },
   "rooster": {
     animIdx: 3,
-    names: ["Roberto", "Matt Damon", "Morty"]
+    names: ["Roberto", "Matt Damon", "Morty", "Maurice", "Ali", "Rufus"],
+  },
+  "butterfly": {
+    animIdx: 6,
+    names: ["Bag", "McGowan", "Naseem", "Marcus", "Isabella", "Jen"],
+  },
+  "frog": {
+    animIdx: 9,
+    names: ["Springer", "Summer", "Bernice", "Cody", "Fred", "Ted", "Zed", "Ned"],
   },
 }
 
-Customer.TYPE_LIST = ["hen", "rooster"]
+Customer.TYPE_LIST = ["hen", "rooster", "butterfly", "frog"]
 
 Customer.ADJECTIVES = [
-  "{0} the Dazzling", "Majestic {0}", "{0} the Respected", "Baby-faced {0}", "{0} the Eternal"
+  "{0} the Dazzling",
+  "Majestic {0}",
+  "{0} the Respected",
+  "Baby-faced {0}",
+  "{0} the Eternal",
+  "{0} the Annoying",
+  "Steadfast {0}",
+  "Beautiful, perfect {0}",
+  "The Exuberant {0}",
+  "Dr. {0}, M.D.",
+  "Dr. {0}, Ph.D.",
 ]
 
 Customer.LIKES_HATES = [
   "Well, {0} is yummy but I can't stand {1}.",
   "I like {0} but not {1}.",
-  "Uhh...can I get a sandwich with uhh... {0}? Also NO {1}!"
+  "Uhh...can I get a sandwich with uhh... {0}? Also NO {1}!",
+  "{0}? YUP. {1}? NOPE.",
+  "Gimme that {0}, hold the {1}.",
+  "...........Just {0} without {1} please.",
+  "I CRAVE {0}. I DESPISE {1}.",
 ]
 
 Customer.DEMANDS = [
   "ON THE DOUBLE",
   "Hurry. I'm late for a meeting!",
-  "I'll be here I guess"
+  "I'll be here I guess...",
+  "SEND HELP!",
+  "I'll just watch your every move.",
+  "Get to it!",
+  "Uhh...yeah.",
+  "3 2 1 GO!",
 ]
 
 // max score for 1* thru 5* (can get up to 6*)
