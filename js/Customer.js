@@ -11,12 +11,14 @@ var Customer = function (group, x, y) {
     align: 'center',
     color: '#ffffdf',
   }).setOrigin(.5, 0),
+  window.uiGroup.add(this.nameText)
   this.subText = this.scene.add.text(128, 21, "says: hullo", {
     fontSize: '12px',
     align: 'center',
     color: '#ffffff',
     wordWrap: { width: 250 }
   }).setOrigin(.5, 0),
+  window.uiGroup.add(this.subText)
   this.whelpReviews = []
   this.reviewText = this.scene.add.text(128, 158, "Your shop is rated 5⭐ on Whelp (1 review)", {
     fontSize: '12px',
@@ -24,6 +26,14 @@ var Customer = function (group, x, y) {
     color: '#cfcfcf',
     wordWrap: { width: 250 }
   }).setOrigin(.5, 0)
+  window.uiGroup.add(this.reviewText)
+  this.feedbackText = this.scene.add.text(128, 226, "hiyo", {
+    fontSize: '55px',
+    align: 'center',
+    color: '#ffffff',
+    backgroundColor: '#ff8faf',
+  }).setOrigin(.5, 0).setAlpha(0)
+  window.uiGroup.add(this.feedbackText)
   this.reviewAnimCountdown = 0
   this.reviewColorIdx = 0
   this.updateReviews()
@@ -82,7 +92,17 @@ Customer.prototype.sandwichesScored = function () {
       totalScore += window.inventory[key] * multiplier
     }
   }
-  // TODO big text feedback for whether this was a good score or not
+  var feedback = '"Yuck"'
+  if (totalScore > 0) {
+    feedback = '"Meh"'
+  }
+  if (totalScore > 10) {
+    feedback = '"Yum!"'
+  }
+  if (totalScore > 30) {
+    feedback = '"Wow!!!"'
+  }
+
   var newSize = 1 + Math.max(totalScore / 30, -.5)
   this.setSize(newSize)
   this.updateAnim()
@@ -99,10 +119,12 @@ Customer.prototype.sandwichesScored = function () {
         rating = j + 2 // if score is above highest maximum, get a 6* rating
       }
     }
+    feedback += "\nThanks!\n" + rating.toString() + "⭐"
     this.whelpReviews.push(rating)
     this.updateReviews()
     this.tweenNewCustomer()
   }
+  this.tweenFeedbackText(feedback)
 }
 
 Customer.prototype.setSize = function (newSize) {
@@ -116,7 +138,17 @@ Customer.prototype.setSize = function (newSize) {
 }
 
 Customer.prototype.tweenFeedbackText = function (text) {
-  // TODO make feedback text
+  this.feedbackText.setDepth(100)
+  this.feedbackText.setText(text)
+  this.scene.tweens.add({
+    targets: this.feedbackText,
+    alpha: 1,
+    delay: 0,
+    duration: 200,
+    hold: 1000,
+    ease: 'Power2.easeOut',
+    yoyo: true,
+  })
 }
 
 Customer.prototype.tweenNewCustomer = function () {

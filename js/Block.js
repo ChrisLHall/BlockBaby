@@ -283,19 +283,24 @@ Block.destroyAllAndRefresh = function () {
 Block.TYPES = {
   "bread": {
     frame: 0,
+    value: 0,
   },
   "leaf": {
     frame: 1,
+    value: 1,
   },
   "meat": {
     frame: 2,
+    value: 1,
   },
   "egg": {
     frame: 3,
+    value: 1,
   },
   "bug": {
     frame: 4,
+    value: 1,
   },
 }
 
-Block.TYPE_LIST = ["bread", "bread", "leaf", "meat", "egg", "bug"]
+Block.TYPE_LIST = ["bread", "bread", "bread", "leaf", "meat", "egg", "bug"]
